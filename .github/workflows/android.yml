@@ -3,11 +3,13 @@ name: Android Build
 on:
   push:
     branches: [main, 'claude/pensive-davinci-TRBiL']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build-debug:
-    name: Debug APK (no secrets needed)
+  build:
+    name: Debug APK
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,7 +38,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('BlastBuddies/android/**/*.gradle*', 'BlastBuddies/android/gradle-wrapper.properties') }}
+          key: gradle-${{ hashFiles('BlastBuddies/android/**/*.gradle*', 'BlastBuddies/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-
 
       - name: Make gradlew executable
@@ -48,72 +50,6 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: BlastBuddies-debug
+          name: BlastBuddies-debug-${{ github.run_number }}
           path: BlastBuddies/android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 14
-
-  build-release:
-    name: Release APK (signed)
-    runs-on: ubuntu-latest
-    # Only runs when keystore secrets are present
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.ref == 'refs/heads/main' &&
-       vars.HAS_KEYSTORE == 'true')
-    defaults:
-      run:
-        working-directory: BlastBuddies
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: BlastBuddies/package-lock.json
-
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: temurin
-
-      - name: Install JS dependencies
-        run: npm ci
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('BlastBuddies/android/**/*.gradle*') }}
-          restore-keys: gradle-
-
-      - name: Decode keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
-
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
-
-      - name: Build release APK
-        env:
-          KEYSTORE_FILE: release.keystore
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          cd android && ./gradlew assembleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file=app/release.keystore \
-            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
-
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: BlastBuddies-release
-          path: BlastBuddies/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
