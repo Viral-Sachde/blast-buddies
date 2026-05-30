@@ -19,3 +19,25 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// Reanimated 3.x reads newArchEnabled to decide which Java source files to compile.
+// Explicitly propagate it to all subprojects so the property is never null there.
+subprojects { subproject ->
+    subproject.ext.set("newArchEnabled", "true")
+
+    afterEvaluate {
+        // Safety net: if Reanimated still includes old-arch layout animation sources
+        // (ReaLayoutAnimator etc.) that reference APIs removed in RN 0.82+, exclude them.
+        if (subproject.name == "react-native-reanimated") {
+            try {
+                def mainSrcSet = subproject.android.sourceSets.getByName("main")
+                def excludes = [
+                    "**/layoutReanimation/ReaLayoutAnimator.java",
+                    "**/layoutReanimation/ReanimatedUIManager.java",
+                    "**/layoutReanimation/ReanimatedUIImplementation.java",
+                ]
+                excludes.each { pattern -> mainSrcSet.java.exclude(pattern) }
+            } catch (Exception ignored) {}
+        }
+    }
+}
