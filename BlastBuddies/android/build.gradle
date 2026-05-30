@@ -18,23 +18,25 @@ buildscript {
     }
 }
 
-apply plugin: "com.facebook.react.rootproject"
-
-// Propagate new-arch flag to all subprojects and exclude old-arch Reanimated
-// sources that reference APIs removed in RN 0.82+.
+// Must run BEFORE apply plugin: "com.facebook.react.rootproject" because that
+// plugin eagerly evaluates all subprojects, making afterEvaluate too late.
 subprojects { subproject ->
+    // Ensure Reanimated 3.x picks the new-arch source path.
     subproject.ext.set("newArchEnabled", "true")
 
-    subproject.afterEvaluate {
+    // plugins.withId fires when the Android library plugin is applied (during
+    // evaluation), so source-set exclusions are registered at the right time.
+    subproject.plugins.withId("com.android.library") {
         if (subproject.name == "react-native-reanimated") {
-            try {
-                def mainSrcSet = subproject.android.sourceSets.getByName("main")
-                [
-                    "**/layoutReanimation/ReaLayoutAnimator.java",
-                    "**/layoutReanimation/ReanimatedUIManager.java",
-                    "**/layoutReanimation/ReanimatedUIImplementation.java",
-                ].each { pattern -> mainSrcSet.java.exclude(pattern) }
-            } catch (Exception ignored) {}
+            [
+                "**/layoutReanimation/ReaLayoutAnimator.java",
+                "**/layoutReanimation/ReanimatedUIManager.java",
+                "**/layoutReanimation/ReanimatedUIImplementation.java",
+            ].each { pattern ->
+                subproject.android.sourceSets.main.java.exclude(pattern)
+            }
         }
     }
 }
+
+apply plugin: "com.facebook.react.rootproject"
