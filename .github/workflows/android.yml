@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Debug APK
+    name: Release APK
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,6 +30,24 @@ jobs:
       - name: Install JS dependencies
         run: npm install
 
+      - name: Generate launcher icons from assets/icon-png.png
+        run: |
+          sudo apt-get install -y imagemagick
+          SRC="assets/icon-png.png"
+          declare -A SIZES=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
+          for DENSITY in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            SIZE=${SIZES[$DENSITY]}
+            DIR="android/app/src/main/res/mipmap-${DENSITY}"
+            mkdir -p "$DIR"
+            convert "$SRC" -resize "${SIZE}x${SIZE}" "$DIR/ic_launcher.png"
+            convert "$SRC" -resize "${SIZE}x${SIZE}" \
+              \( +clone -threshold 100% -negate \
+                 -fill white -draw "circle $((SIZE/2)),$((SIZE/2)) $((SIZE/2)),0" \) \
+              -alpha off -compose copy_opacity -composite \
+              -background none -flatten "$DIR/ic_launcher_round.png" || \
+            convert "$SRC" -resize "${SIZE}x${SIZE}" "$DIR/ic_launcher_round.png"
+          done
+
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
@@ -42,12 +60,12 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build debug APK
-        run: cd android && ./gradlew assembleDebug --no-daemon
+      - name: Build release APK
+        run: cd android && ./gradlew assembleRelease --no-daemon
 
-      - name: Upload debug APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: BlastBuddies-debug-${{ github.run_number }}
-          path: BlastBuddies/android/app/build/outputs/apk/debug/app-debug.apk
+          name: BlastBuddies-release-${{ github.run_number }}
+          path: BlastBuddies/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
