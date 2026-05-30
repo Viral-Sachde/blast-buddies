@@ -2,14 +2,6 @@
 """
 Patches react-native-reanimated 3.x Android Java sources to remove old-arch
 code that references APIs removed in React Native 0.82+.
-
-Deleted files (old-arch only, replaced by C++/JSI in new arch):
-  ReaLayoutAnimator.java, ReanimatedUIManager.java,
-  ReanimatedUIImplementation.java, ReanimatedUIManagerFactory.java
-
-Patched files (references to the deleted classes removed):
-  ReanimatedModule.java, ReanimatedPackage.java,
-  ReanimatedNativeHierarchyManager.java, TabNavigatorObserver.java
 """
 import os, re, sys
 
@@ -25,7 +17,7 @@ def fp(*parts):
 
 def read(path):
     if not os.path.exists(path):
-        print(f"  skip (missing): {path}")
+        print(f"  skip (missing): {os.path.basename(path)}")
         return None
     with open(path) as f:
         return f.read()
@@ -43,6 +35,78 @@ def delete(path):
         print(f"  deleted: {os.path.relpath(path, BASE)}")
 
 
+def remove_lines_containing(src, *snippets):
+    """Remove every line that contains any of the given substrings."""
+    lines = src.splitlines(keepends=True)
+    result = []
+    for line in lines:
+        if any(s in line for s in snippets):
+            continue
+        result.append(line)
+    return "".join(result)
+
+
+def remove_method(src, signature_fragment):
+    """
+    Remove a method whose signature contains `signature_fragment`.
+    Handles nested braces. Also removes a preceding @Override if present.
+    """
+    lines = src.splitlines(keepends=True)
+    result = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if signature_fragment in line:
+            # Walk back to eat the preceding @Override line (if any)
+            if result and "@Override" in result[-1]:
+                result.pop()
+            # Walk forward to consume the method body (balanced braces)
+            depth = 0
+            found_open = False
+            while i < len(lines):
+                for ch in lines[i]:
+                    if ch == "{":
+                        depth += 1
+                        found_open = True
+                    elif ch == "}":
+                        depth -= 1
+                if found_open and depth == 0:
+                    i += 1
+                    break
+                i += 1
+        else:
+            result.append(line)
+            i += 1
+    return "".join(result)
+
+
+def remove_if_block(src, condition_fragment):
+    """Remove an if-block whose condition contains `condition_fragment`."""
+    lines = src.splitlines(keepends=True)
+    result = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if condition_fragment in line and line.lstrip().startswith("if"):
+            depth = 0
+            found_open = False
+            while i < len(lines):
+                for ch in lines[i]:
+                    if ch == "{":
+                        depth += 1
+                        found_open = True
+                    elif ch == "}":
+                        depth -= 1
+                if found_open and depth == 0:
+                    i += 1
+                    break
+                i += 1
+        else:
+            result.append(line)
+            i += 1
+    return "".join(result)
+
+
 # ── 1. Delete old-arch-only files ────────────────────────────────────────────
 print("Deleting old-arch files …")
 for f in [
@@ -54,82 +118,56 @@ for f in [
     delete(fp(f))
 
 # ── 2. ReanimatedModule.java ──────────────────────────────────────────────────
-# Remove UIManagerModuleListener import + implements + listener registration +
-# willDispatchViewUpdates @Override method.
 print("Patching ReanimatedModule.java …")
 src = read(fp("ReanimatedModule.java"))
 if src:
-    src = src.replace("import com.facebook.react.uimanager.UIManagerModuleListener;\n", "")
+    src = remove_lines_containing(
+        src,
+        "import com.facebook.react.uimanager.UIManagerModuleListener",
+        "addUIManagerListener",
+        "removeUIManagerListener",
+    )
     src = src.replace(", UIManagerModuleListener", "")
-    # addUIManagerListener call
-    src = re.sub(r"[ \t]*uiManager\.addUIManagerListener\(this\);\n", "", src)
-    # removeUIManagerListener call (may span the line with combineRunnables)
-    src = re.sub(
-        r"[ \t]*Utils\.combineRunnables\([^;]*removeUIManagerListener[^;]*\);\n",
-        "",
-        src,
-    )
-    # @Override willDispatchViewUpdates method — match @Override + method body
-    src = re.sub(
-        r"\n[ \t]*@Override\n[ \t]*public void willDispatchViewUpdates\([^)]*\)[^{]*\{[^}]*\}",
-        "",
-        src,
-        flags=re.DOTALL,
-    )
+    src = remove_method(src, "willDispatchViewUpdates")
     write(fp("ReanimatedModule.java"), src)
 
 # ── 3. ReanimatedPackage.java ─────────────────────────────────────────────────
-# Remove ReanimatedUIManager import, class references, and the case branch.
 print("Patching ReanimatedPackage.java …")
 src = read(fp("ReanimatedPackage.java"))
 if src:
-    src = src.replace("import com.facebook.react.uimanager.ReanimatedUIManager;\n", "")
-    # Three occurrences of ReanimatedUIManager.class (with leading/trailing commas)
-    src = re.sub(r",\s*ReanimatedUIManager\.class", "", src)
-    src = re.sub(r"ReanimatedUIManager\.class\s*,?\s*", "", src)
-    # case ReanimatedUIManager.NAME -> createUIManager(reactContext);
-    src = re.sub(r"[ \t]*case ReanimatedUIManager\.NAME[^\n]*\n", "", src)
-    # createUIManager private helper method
-    src = re.sub(
-        r"\n[ \t]*private[^(]+createUIManager[^{]*\{[^}]*\}",
-        "",
+    src = remove_lines_containing(
         src,
-        flags=re.DOTALL,
+        "import com.facebook.react.uimanager.ReanimatedUIManager",
+        "ReanimatedUIManager.class",
+        "ReanimatedUIManager.NAME",
+        "ReanimatedUIManagerFactory",
     )
-    # Belt-and-suspenders: remove any remaining line mentioning ReanimatedUIManagerFactory
-    src = re.sub(r"[^\n]*ReanimatedUIManagerFactory[^\n]*\n", "", src)
+    src = remove_method(src, "createUIManager")
     write(fp("ReanimatedPackage.java"), src)
 
 # ── 4. ReanimatedNativeHierarchyManager.java ──────────────────────────────────
 print("Patching ReanimatedNativeHierarchyManager.java …")
 src = read(fp("layoutReanimation/ReanimatedNativeHierarchyManager.java"))
 if src:
-    src = re.sub(r"[ \t]*private final ReaLayoutAnimator mReaLayoutAnimator;\n", "", src)
-    src = re.sub(r"[ \t]*mReaLayoutAnimator = new ReaLayoutAnimator\([^)]*\);\n", "", src)
-    # if (indicesToRemove != null && mReaLayoutAnimator instanceof ReaLayoutAnimator) { ... }
-    src = re.sub(
-        r"[ \t]*if\s*\(indicesToRemove\s*!=\s*null\s*&&\s*mReaLayoutAnimator\s*instanceof\s*ReaLayoutAnimator\)[^}]*\}[ \t]*\n",
-        "",
+    src = remove_lines_containing(
         src,
-        flags=re.DOTALL,
+        "ReaLayoutAnimator",
+        "mReaLayoutAnimator",
     )
-    # Remove any other remaining mReaLayoutAnimator references
-    src = re.sub(r"[^\n]*\bmReaLayoutAnimator\b[^\n]*\n", "", src)
+    src = remove_if_block(src, "mReaLayoutAnimator instanceof ReaLayoutAnimator")
     write(fp("layoutReanimation/ReanimatedNativeHierarchyManager.java"), src)
 
 # ── 5. TabNavigatorObserver.java ──────────────────────────────────────────────
 print("Patching TabNavigatorObserver.java …")
 src = read(fp("layoutReanimation/TabNavigatorObserver.java"))
 if src:
-    src = re.sub(r"[ \t]*private final ReaLayoutAnimator mReaLayoutAnimator;\n", "", src)
+    src = remove_lines_containing(src, "ReaLayoutAnimator", "mReaLayoutAnimator")
+    # Fix the constructor signature that referenced ReaLayoutAnimator
     src = re.sub(
-        r"public TabNavigatorObserver\(\s*ReaLayoutAnimator \w+\s*\)",
+        r"public TabNavigatorObserver\([^)]*\)",
         "public TabNavigatorObserver()",
         src,
     )
-    src = re.sub(r"[ \t]*this\.mReaLayoutAnimator = \w+;\n", "", src)
-    # Remove any remaining mReaLayoutAnimator or ReaLayoutAnimator references
-    src = re.sub(r"[^\n]*\b(?:mReaLayoutAnimator|ReaLayoutAnimator)\b[^\n]*\n", "", src)
     write(fp("layoutReanimation/TabNavigatorObserver.java"), src)
 
 print("\nreact-native-reanimated patched successfully for RN 0.85 new arch.")
