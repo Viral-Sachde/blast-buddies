@@ -40,7 +40,7 @@ function FloatingBlob({ config }: { config: typeof BLOB_CONFIGS[0] }) {
   return (
     <Animated.View
       style={[
-        { position: 'absolute', left: config.x as any, top: config.y as any, opacity: 0.5 },
+        { position: 'absolute', left: config.x as any, top: config.y as any, opacity: 0.35 },
         animStyle,
       ]}
     >

@@ -9,12 +9,12 @@ export const THEMES: Record<string, ThemeData> = {
     label: 'Candy Pop',
     vars: {
       primary: '#ff5ea8', primaryD: '#d62f80',
-      accent: '#34dec0', accentD: '#16a98e',
-      gold: '#ffc83d', goldD: '#e09a00',
-      gem: '#a974ff', gemD: '#7e44e0',
-      menuTop: '#ffd6ec', menuBot: '#c7f0ff',
-      panel: '#ffffff', panelEdge: '#ffd0e6',
-      ink: '#5a2a55', inkSoft: '#9a6f96',
+      accent: '#2ecbff', accentD: '#0e94d6',
+      gold: '#ffb822', goldD: '#d98e00',
+      gem: '#b07cff', gemD: '#7e44e0',
+      menuTop: '#0a1e5c', menuBot: '#1446a0',
+      panel: '#ffffff', panelEdge: '#d8e4f0',
+      ink: '#ffffff', inkSoft: '#b0c4e8',
     },
   },
   rainbow: {
@@ -104,7 +104,7 @@ export const UPGRADES: UpgradeDef[] = [
 ];
 
 export const DEFAULT_PROFILE = {
-  coins: 350,
+  coins: 600,
   gems: 8,
   level: 1,
   lvlProgress: 0.2,

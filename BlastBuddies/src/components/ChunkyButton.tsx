@@ -6,7 +6,7 @@ import React, { ReactNode } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
 
-type ButtonVariant = 'primary' | 'accent' | 'gold' | 'gray';
+type ButtonVariant = 'primary' | 'accent' | 'gold' | 'gray' | 'green' | 'danger';
 
 interface ChunkyButtonProps {
   children: ReactNode;
@@ -38,6 +38,8 @@ export function ChunkyButton({
     accent: { bg: theme.accent, shadow: theme.accentD, text: '#fff', textShadow: 'rgba(0,0,0,0.18)' },
     gold: { bg: theme.gold, shadow: theme.goldD, text: '#7a4a00', textShadow: 'rgba(255,255,255,0.4)' },
     gray: { bg: '#c4cdda', shadow: '#97a3b5', text: '#5a6678', textShadow: 'none' },
+    green: { bg: '#5bc920', shadow: '#3a9a10', text: '#fff', textShadow: 'rgba(0,0,0,0.18)' },
+    danger: { bg: '#e83030', shadow: '#a01818', text: '#fff', textShadow: 'rgba(0,0,0,0.18)' },
   };
 
   const c = colors[variant];
@@ -129,10 +131,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 18,
-    backgroundColor: '#eef2f8',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottomColor: '#c2cad6',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.18,

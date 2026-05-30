@@ -7,7 +7,6 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Icon } from './Icon';
 import { Chip } from './Chip';
 import { IconButton } from './ChunkyButton';
-import { useTheme } from '../theme';
 import { Profile } from '../types';
 
 interface SubHeaderProps {
@@ -17,13 +16,12 @@ interface SubHeaderProps {
 }
 
 export function SubHeader({ title, profile, onBack }: SubHeaderProps) {
-  const theme = useTheme();
   return (
     <View style={styles.container}>
       <IconButton onPress={onBack} style={styles.backBtn}>
         <Icon name="back" size={26} color="#5a6678" />
       </IconButton>
-      <Text style={[styles.title, { color: theme.ink }]}>{title}</Text>
+      <Text style={[styles.title, { color: '#fff' }]}>{title}</Text>
       <Chip icon="coin" value={profile.coins} />
       <Chip icon="gem" value={profile.gems} />
     </View>

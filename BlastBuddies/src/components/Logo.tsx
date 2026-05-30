@@ -66,8 +66,8 @@ export function Logo({ scale = 1, withMascot = true }: LogoProps) {
           styles.blast,
           {
             fontSize: Math.round(66 * scale),
-            color: theme.gold,
-            textShadowColor: theme.primaryD,
+            color: '#ffb822',
+            textShadowColor: '#c45800',
             textShadowOffset: { width: 0, height: Math.round(7 * scale) },
             textShadowRadius: Math.round(5 * scale),
           },
@@ -80,8 +80,8 @@ export function Logo({ scale = 1, withMascot = true }: LogoProps) {
           styles.buddies,
           {
             fontSize: Math.round(46 * scale),
-            color: theme.accent,
-            textShadowColor: theme.accentD,
+            color: '#2ecbff',
+            textShadowColor: '#0058a0',
             textShadowOffset: { width: 0, height: Math.round(6 * scale) },
             textShadowRadius: Math.round(4 * scale),
             marginTop: Math.round(2 * scale),
