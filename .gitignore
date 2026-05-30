@@ -1,0 +1,76 @@
+# Node modules
+node_modules/
+
+# Build outputs
+android/app/build/
+android/build/
+ios/build/
+ios/Pods/
+ios/DerivedData/
+
+# React Native
+.react-native/
+
+# Metro bundler
+.metro-health-check*
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# macOS
+.DS_Store
+*.xcuserstate
+
+# Xcode
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
+
+# Gradle
+.gradle/
+local.properties
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Coverage
+coverage/
+
+# Jest
+jest_*
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Lock files (keep package-lock.json, remove others if not using)
+yarn.lock
+
+# Flipper
+ios/Pods/
+
+# Android signing
+android/app/*.jks
+android/app/*.keystore

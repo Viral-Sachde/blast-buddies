@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Change to "app-store" for TestFlight/App Store upload -->
+  <key>method</key>
+  <string>ad-hoc</string>
+
+  <key>teamID</key>
+  <!-- Replace with your 10-character Apple Team ID -->
+  <string>XXXXXXXXXX</string>
+
+  <key>provisioningProfiles</key>
+  <dict>
+    <!-- Bundle ID → Provisioning Profile name (must match what you uploaded as secret) -->
+    <key>com.blastbuddies.app</key>
+    <string>BlastBuddies AdHoc</string>
+  </dict>
+
+  <key>signingStyle</key>
+  <string>manual</string>
+
+  <key>stripSwiftSymbols</key>
+  <true/>
+
+  <key>compileBitcode</key>
+  <false/>
+
+  <key>thinning</key>
+  <string>&lt;none&gt;</string>
+</dict>
+</plist>
