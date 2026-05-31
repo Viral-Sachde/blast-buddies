@@ -1,18 +1,7 @@
-// ============================================================
-// BLAST BUDDIES — Background scene with gradient + hills + deco
-// ============================================================
-
-import React, { ReactNode } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import React, { ReactNode, useRef, useEffect } from 'react';
+import { View, StyleSheet, Dimensions, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 import { Background } from '../types';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -24,68 +13,54 @@ interface SceneProps {
 }
 
 function FloatingCloud({ x, y, w, delay }: { x: string; y: string; w: number; delay: number }) {
-  const translateY = useSharedValue(0);
-  React.useEffect(() => {
-    translateY.value = withRepeat(
-      withSequence(
-        withTiming(-8, { duration: 1500 + delay * 500 }),
-        withTiming(0, { duration: 1500 + delay * 500 }),
-      ),
-      -1,
-      false,
-    );
+  const translateY = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateY, { toValue: -8, duration: 1500 + delay * 500, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration: 1500 + delay * 500, useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
   return (
     <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          top: y as any,
-          left: x as any,
-          width: w,
-          height: 26,
-          borderRadius: 999,
-          backgroundColor: 'rgba(255,255,255,0.85)',
-        } as any,
-        animStyle,
-      ]}
+      style={{
+        position: 'absolute',
+        top: y as any,
+        left: x as any,
+        width: w,
+        height: 26,
+        borderRadius: 999,
+        backgroundColor: 'rgba(255,255,255,0.85)',
+        transform: [{ translateY }],
+      } as any}
     />
   );
 }
 
 function FloatingDot({ x, y, size, delay, color }: { x: string; y: string; size: number; delay: number; color: string }) {
-  const translateY = useSharedValue(0);
-  React.useEffect(() => {
-    translateY.value = withRepeat(
-      withSequence(
-        withTiming(-8, { duration: 1500 + delay * 400 }),
-        withTiming(0, { duration: 1500 + delay * 400 }),
-      ),
-      -1,
-      false,
-    );
+  const translateY = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateY, { toValue: -8, duration: 1500 + delay * 400, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration: 1500 + delay * 400, useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
   return (
     <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          top: y as any,
-          left: x as any,
-          width: size,
-          height: size,
-          borderRadius: 999,
-          backgroundColor: color,
-          opacity: 0.85,
-        } as any,
-        animStyle,
-      ]}
+      style={{
+        position: 'absolute',
+        top: y as any,
+        left: x as any,
+        width: size,
+        height: size,
+        borderRadius: 999,
+        backgroundColor: color,
+        opacity: 0.85,
+        transform: [{ translateY }],
+      } as any}
     />
   );
 }
@@ -97,7 +72,6 @@ export function Scene({ bg, children, style = {} }: SceneProps) {
       colors={[b.skyTop, b.skyBot]}
       style={[StyleSheet.absoluteFill, { overflow: 'hidden' }, style]}
     >
-      {/* Sun / moon glow */}
       <View
         style={{
           position: 'absolute',
@@ -111,53 +85,27 @@ export function Scene({ bg, children, style = {} }: SceneProps) {
         }}
       />
 
-      {/* Hills SVG */}
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '62%' }}>
         <Svg viewBox="0 0 440 300" preserveAspectRatio="none" width="100%" height="100%">
-          <Path
-            d="M0 150 Q90 70 180 130 T440 110 V300 H0 Z"
-            fill={b.hillFar}
-            opacity="0.85"
-          />
-          <Path
-            d="M0 200 Q120 120 240 185 T440 165 V300 H0 Z"
-            fill={b.hillNear}
-            opacity="0.95"
-          />
+          <Path d="M0 150 Q90 70 180 130 T440 110 V300 H0 Z" fill={b.hillFar} opacity="0.85" />
+          <Path d="M0 200 Q120 120 240 185 T440 165 V300 H0 Z" fill={b.hillNear} opacity="0.95" />
         </Svg>
       </View>
 
-      {/* Ground band */}
       <View
         style={{
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: 0, left: 0, right: 0,
           height: '18%',
           backgroundColor: b.ground,
         }}
       />
 
-      {/* Decorations */}
       {b.deco === 'clouds' && [0, 1, 2].map((i) => (
-        <FloatingCloud
-          key={i}
-          x={`${(i * 37 + 8) % 80}%`}
-          y={`${10 + i * 14}%`}
-          w={70 - i * 8}
-          delay={i}
-        />
+        <FloatingCloud key={i} x={`${(i * 37 + 8) % 80}%`} y={`${10 + i * 14}%`} w={70 - i * 8} delay={i} />
       ))}
       {b.deco === 'snow' && Array.from({ length: 16 }).map((_, i) => (
-        <FloatingDot
-          key={i}
-          x={`${(i * 37) % 95}%`}
-          y={`${(i * 53) % 90}%`}
-          size={7}
-          delay={i % 4}
-          color="#fff"
-        />
+        <FloatingDot key={i} x={`${(i * 37) % 95}%`} y={`${(i * 53) % 90}%`} size={7} delay={i % 4} color="#fff" />
       ))}
       {b.deco === 'bubbles' && Array.from({ length: 12 }).map((_, i) => (
         <View

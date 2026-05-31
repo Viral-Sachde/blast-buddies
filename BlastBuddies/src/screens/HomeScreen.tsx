@@ -1,14 +1,7 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Ellipse, Path } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 import { Logo } from '../components/Logo';
 import { LevelBadge } from '../components/LevelBadge';
 import { Chip } from '../components/Chip';
@@ -28,13 +21,11 @@ function Landscape() {
       <Svg width={W} height={280} viewBox={`0 0 ${W} 280`}>
         <Path
           d={`M0 120 Q${W * 0.2} 60 ${W * 0.5} 90 Q${W * 0.8} 120 ${W} 80 L${W} 280 L0 280 Z`}
-          fill="#4a9e5c"
-          opacity={0.6}
+          fill="#4a9e5c" opacity={0.6}
         />
         <Path
           d={`M0 160 Q${W * 0.3} 110 ${W * 0.5} 140 Q${W * 0.7} 170 ${W} 130 L${W} 280 L0 280 Z`}
-          fill="#3d8f4e"
-          opacity={0.8}
+          fill="#3d8f4e" opacity={0.8}
         />
         <Path
           d={`M0 200 Q${W * 0.25} 170 ${W * 0.5} 190 Q${W * 0.75} 210 ${W} 180 L${W} 280 L0 280 Z`}
@@ -88,35 +79,25 @@ interface HomeScreenProps {
 export function HomeScreen({ profile, cannonSkin, go, onPlay }: HomeScreenProps) {
   const theme = useTheme();
 
-  const cannonY = useSharedValue(0);
+  const cannonY = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    cannonY.value = withRepeat(
-      withSequence(
-        withTiming(-8, { duration: 1700 }),
-        withTiming(0, { duration: 1700 }),
-      ),
-      -1,
-      false,
-    );
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(cannonY, { toValue: -8, duration: 1700, useNativeDriver: true }),
+        Animated.timing(cannonY, { toValue: 0, duration: 1700, useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
-  const cannonFloatStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: cannonY.value }],
-  }));
 
-  const playScale = useSharedValue(1);
+  const playScale = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    playScale.value = withRepeat(
-      withSequence(
-        withTiming(1.07, { duration: 700 }),
-        withTiming(1.0, { duration: 700 }),
-      ),
-      -1,
-      false,
-    );
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(playScale, { toValue: 1.07, duration: 700, useNativeDriver: true }),
+        Animated.timing(playScale, { toValue: 1.0, duration: 700, useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
-  const playPulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: playScale.value }],
-  }));
 
   return (
     <LinearGradient
@@ -159,7 +140,7 @@ export function HomeScreen({ profile, cannonSkin, go, onPlay }: HomeScreenProps)
 
       {/* Cannon on grassy platform */}
       <View style={styles.cannonSection}>
-        <Animated.View style={cannonFloatStyle}>
+        <Animated.View style={{ transform: [{ translateY: cannonY }] }}>
           <Cannon skin={cannonSkin} size={150} angle={-8} />
         </Animated.View>
         <GrassyPlatform />
@@ -167,10 +148,10 @@ export function HomeScreen({ profile, cannonSkin, go, onPlay }: HomeScreenProps)
 
       {/* PLAY button */}
       <View style={styles.playArea}>
-        <Animated.View style={playPulseStyle}>
+        <Animated.View style={{ transform: [{ scale: playScale }] }}>
           <ChunkyButton
             onPress={onPlay}
-            variant="accent"
+            variant="green"
             fontSize={32}
             paddingVertical={20}
             paddingHorizontal={70}
@@ -205,10 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     zIndex: 3,
   },
-  chips: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+  chips: { flexDirection: 'row', gap: 8 },
   settingsBtn: {
     position: 'absolute',
     top: 66,
@@ -240,9 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 2,
   },
-  platform: {
-    marginTop: -20,
-  },
+  platform: { marginTop: -20 },
   landscape: {
     position: 'absolute',
     bottom: 0,
@@ -250,10 +226,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1,
   },
-  cloud: {
-    position: 'absolute',
-    zIndex: 0,
-  },
+  cloud: { position: 'absolute', zIndex: 0 },
   playArea: {
     position: 'absolute',
     bottom: 130,
@@ -266,8 +239,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#5bc920',
-    borderBottomColor: '#3a9a10',
   },
   playInner: {
     flexDirection: 'row',

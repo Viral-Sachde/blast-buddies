@@ -1,20 +1,9 @@
-// ============================================================
-// BLAST BUDDIES — Daily Spin screen with spinning wheel
-// ============================================================
-
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 import Svg, { G, Path, Circle, Text as SvgText } from 'react-native-svg';
 import { SubHeader } from '../components/SubHeader';
 import { BgBlobs } from '../components/BgBlobs';
-import { Icon } from '../components/Icon';
 import { ChunkyButton } from '../components/ChunkyButton';
 import { useTheme } from '../theme';
 import { Profile } from '../types';
@@ -45,8 +34,7 @@ interface DailySpinScreenProps {
 function WheelSvg({ prizes }: { prizes: Prize[] }) {
   const seg = 360 / prizes.length;
   const r = 125;
-  const cx = 135;
-  const cy = 135;
+  const cx = 135, cy = 135;
 
   const segments = prizes.map((p, i) => {
     const startAngle = ((i * seg - 90) * Math.PI) / 180;
@@ -57,13 +45,11 @@ function WheelSvg({ prizes }: { prizes: Prize[] }) {
     const y2 = cy + r * Math.sin(endAngle);
     const largeArc = seg > 180 ? 1 : 0;
     const pathData = `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z`;
-
     const midAngle = ((i * seg + seg / 2 - 90) * Math.PI) / 180;
     const textR = r * 0.65;
     const tx = cx + textR * Math.cos(midAngle);
     const ty = cy + textR * Math.sin(midAngle);
     const textRotation = i * seg + seg / 2;
-
     return { pathData, fill: p.c, tx, ty, textRotation, label: p.v.toString() };
   });
 
@@ -72,20 +58,12 @@ function WheelSvg({ prizes }: { prizes: Prize[] }) {
       {segments.map((seg, i) => (
         <G key={i}>
           <Path d={seg.pathData} fill={seg.fill} />
-          <SvgText
-            x={seg.tx}
-            y={seg.ty + 5}
-            textAnchor="middle"
-            fill="#fff"
-            fontSize="14"
-            fontWeight="800"
-            transform={`rotate(${seg.textRotation}, ${seg.tx}, ${seg.ty})`}
-          >
+          <SvgText x={seg.tx} y={seg.ty + 5} textAnchor="middle" fill="#fff" fontSize="14" fontWeight="800"
+            transform={`rotate(${seg.textRotation}, ${seg.tx}, ${seg.ty})`}>
             {seg.label}
           </SvgText>
         </G>
       ))}
-      {/* Center circle */}
       <Circle cx="135" cy="135" r="22" fill="#fff" />
     </Svg>
   );
@@ -97,17 +75,19 @@ export function DailySpinScreen({ profile, go, onPrize }: DailySpinScreenProps) 
   const [spinning, setSpinning] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [won, setWon] = useState<Prize | null>(null);
-  const rotation = useSharedValue(0);
+  const rotation = useRef(new Animated.Value(0)).current;
 
   const spin = () => {
     if (spinning || claimed) return;
     setSpinning(true);
     const idx = Math.floor(Math.random() * PRIZES.length);
     const target = 360 * 5 + (360 - (idx * seg + seg / 2));
-    rotation.value = withTiming(target + rotation.value, {
+    Animated.timing(rotation, {
+      toValue: target,
       duration: 3500,
       easing: Easing.bezier(0.17, 0.67, 0.2, 1),
-    });
+      useNativeDriver: true,
+    }).start();
     setTimeout(() => {
       setSpinning(false);
       setClaimed(true);
@@ -116,39 +96,31 @@ export function DailySpinScreen({ profile, go, onPrize }: DailySpinScreenProps) 
     }, 3600);
   };
 
-  const wheelAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
+  const rotate = rotation.interpolate({
+    inputRange: [0, 360],
+    outputRange: ['0deg', '360deg'],
+  });
 
   const disabled = spinning || claimed;
 
   return (
-    <LinearGradient
-      colors={[theme.menuTop, theme.menuBot]}
-      style={StyleSheet.absoluteFill}
-    >
+    <LinearGradient colors={[theme.menuTop, theme.menuBot]} style={StyleSheet.absoluteFill}>
       <SubHeader title="Daily Spin" profile={profile} onBack={() => go('home')} />
       <BgBlobs />
 
       <View style={[styles.teaser, { zIndex: 2 }]}>
-        <Text style={[styles.teaserText, { color: theme.ink }]}>
-          Spin for free prizes!
-        </Text>
+        <Text style={[styles.teaserText, { color: theme.ink }]}>Spin for free prizes!</Text>
       </View>
 
-      {/* Wheel container */}
       <View style={styles.wheelContainer}>
-        {/* Pointer triangle */}
         <View style={[styles.pointer, { borderTopColor: theme.primary }]} />
-        {/* Wheel outer ring */}
         <View style={[styles.wheelOuter, { borderColor: theme.gold }]}>
-          <Animated.View style={[{ width: 270, height: 270 }, wheelAnimStyle]}>
+          <Animated.View style={{ width: 270, height: 270, transform: [{ rotate }] }}>
             <WheelSvg prizes={PRIZES} />
           </Animated.View>
         </View>
       </View>
 
-      {/* Bottom area */}
       <View style={styles.bottom}>
         {won && (
           <Text style={[styles.wonText, { color: theme.ink }]}>
@@ -171,62 +143,11 @@ export function DailySpinScreen({ profile, go, onPrize }: DailySpinScreenProps) 
 }
 
 const styles = StyleSheet.create({
-  teaser: {
-    position: 'absolute',
-    top: 96,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  teaserText: {
-    fontFamily: 'Baloo2-Bold',
-    fontSize: 20,
-    fontWeight: '700',
-    opacity: 0.85,
-  },
-  wheelContainer: {
-    position: 'absolute',
-    top: '44%',
-    alignSelf: 'center',
-    transform: [{ translateY: -135 }],
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  pointer: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 16,
-    borderRightWidth: 16,
-    borderTopWidth: 26,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    zIndex: 5,
-    marginBottom: -4,
-  },
-  wheelOuter: {
-    width: 270,
-    height: 270,
-    borderRadius: 135,
-    borderWidth: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 10,
-  },
-  bottom: {
-    position: 'absolute',
-    bottom: 60,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    gap: 12,
-    zIndex: 3,
-  },
-  wonText: {
-    fontFamily: 'Baloo2-ExtraBold',
-    fontWeight: '800',
-    fontSize: 20,
-  },
+  teaser: { position: 'absolute', top: 96, left: 0, right: 0, alignItems: 'center' },
+  teaserText: { fontFamily: 'Baloo2-Bold', fontSize: 20, fontWeight: '700', opacity: 0.85 },
+  wheelContainer: { position: 'absolute', top: '44%', alignSelf: 'center', transform: [{ translateY: -135 }], alignItems: 'center', zIndex: 2 },
+  pointer: { width: 0, height: 0, borderLeftWidth: 16, borderRightWidth: 16, borderTopWidth: 26, borderLeftColor: 'transparent', borderRightColor: 'transparent', zIndex: 5, marginBottom: -4 },
+  wheelOuter: { width: 270, height: 270, borderRadius: 135, borderWidth: 10, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 },
+  bottom: { position: 'absolute', bottom: 60, left: 0, right: 0, alignItems: 'center', gap: 12, zIndex: 3 },
+  wonText: { fontFamily: 'Baloo2-ExtraBold', fontWeight: '800', fontSize: 20 },
 });

@@ -1,20 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, Animated as RNAnimated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  withDelay,
-  Easing,
-} from 'react-native-reanimated';
-import { Logo } from '../components/Logo';
-import { BgBlobs } from '../components/BgBlobs';
-import { Cannon } from '../components/Cannon';
+import Svg, { Path, Defs, RadialGradient as SvgRadialGradient, Stop, Circle, Ellipse } from 'react-native-svg';
 import { ChunkyButton } from '../components/ChunkyButton';
-import { useTheme } from '../theme';
+import { Monster } from '../components/Monster';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -22,167 +11,191 @@ interface SplashScreenProps {
   onDone: () => void;
 }
 
-function LightRays() {
-  const rotation = useSharedValue(0);
+const BLOB_CONFIGS = [
+  { x: 0.06, y: 0.14, size: 62, color: '#ff5ea8', dark: '#d62f80', rot: -15 },
+  { x: 0.72, y: 0.10, size: 74, color: '#ffc83d', dark: '#e09a00', rot: 10 },
+  { x: 0.04, y: 0.62, size: 58, color: '#34dec0', dark: '#16a98e', rot: -8 },
+  { x: 0.76, y: 0.60, size: 52, color: '#7c5cff', dark: '#5436d6', rot: 12 },
+  { x: 0.42, y: 0.76, size: 44, color: '#37c6ff', dark: '#1a8fd6', rot: -5 },
+];
+
+function FloatingBlob({ x, y, size, color, dark, rot, delay }: {
+  x: number; y: number; size: number; color: string; dark: string; rot: number; delay: number;
+}) {
+  const anim = useRef(new RNAnimated.Value(0)).current;
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 30000, easing: Easing.linear }),
-      -1,
-      false,
-    );
+    RNAnimated.loop(
+      RNAnimated.sequence([
+        RNAnimated.timing(anim, { toValue: 1, duration: 1800 + delay * 200, useNativeDriver: true }),
+        RNAnimated.timing(anim, { toValue: 0, duration: 1800 + delay * 200, useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
-  const rays = Array.from({ length: 12 }, (_, i) => i * 30);
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -12] });
   return (
-    <Animated.View style={[styles.raysContainer, animStyle]}>
-      {rays.map((deg) => (
-        <View
-          key={deg}
-          style={[
-            styles.ray,
-            { transform: [{ rotate: `${deg}deg` }] },
-          ]}
-        />
-      ))}
-    </Animated.View>
+    <RNAnimated.View style={[
+      styles.blob,
+      {
+        left: W * x,
+        top: H * y,
+        opacity: 0.45,
+        transform: [{ translateY }, { rotate: `${rot}deg` }],
+      },
+    ]}>
+      <Monster skin={{ body: color, dark }} num="" size={size} />
+    </RNAnimated.View>
   );
 }
 
-function Sparkle({ x, y, delay: d, size }: { x: number; y: number; delay: number; size: number }) {
-  const opacity = useSharedValue(0);
-  useEffect(() => {
-    opacity.value = withDelay(
-      d,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: 600 }),
-          withTiming(0.1, { duration: 600 }),
-        ),
-        -1,
-        false,
-      ),
-    );
-  }, []);
-  const s = useAnimatedStyle(() => ({ opacity: opacity.value }));
+function Sparkles() {
+  const positions = [
+    { x: 0.12, y: 0.08 }, { x: 0.82, y: 0.06 }, { x: 0.25, y: 0.30 },
+    { x: 0.78, y: 0.32 }, { x: 0.50, y: 0.04 }, { x: 0.15, y: 0.50 },
+    { x: 0.88, y: 0.48 }, { x: 0.36, y: 0.68 }, { x: 0.66, y: 0.70 },
+    { x: 0.92, y: 0.22 }, { x: 0.05, y: 0.40 }, { x: 0.60, y: 0.15 },
+  ];
   return (
-    <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          left: x,
-          top: y,
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: '#fff',
-        },
-        s,
-      ]}
-    />
+    <>
+      {positions.map((p, i) => {
+        const anim = useRef(new RNAnimated.Value(i % 2)).current;
+        useEffect(() => {
+          RNAnimated.loop(
+            RNAnimated.sequence([
+              RNAnimated.timing(anim, { toValue: 1, duration: 500 + (i * 137) % 600, useNativeDriver: true }),
+              RNAnimated.timing(anim, { toValue: 0.1, duration: 500 + (i * 137) % 600, useNativeDriver: true }),
+            ]),
+          ).start();
+        }, []);
+        const size = 3 + (i % 4);
+        return (
+          <RNAnimated.View key={i} style={[
+            styles.sparkle,
+            { left: W * p.x, top: H * p.y, width: size, height: size, borderRadius: size, opacity: anim },
+          ]} />
+        );
+      })}
+    </>
+  );
+}
+
+function LightRays() {
+  const anim = useRef(new RNAnimated.Value(0)).current;
+  useEffect(() => {
+    RNAnimated.loop(
+      RNAnimated.timing(anim, { toValue: 1, duration: 24000, useNativeDriver: true }),
+    ).start();
+  }, []);
+  const rotate = anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const rays = Array.from({ length: 10 }, (_, i) => i * 36);
+  return (
+    <RNAnimated.View style={[styles.raysWrap, { transform: [{ rotate }] }]}>
+      <Svg width={420} height={420} viewBox="-210 -210 420 420">
+        {rays.map((deg) => {
+          const rad = (deg * Math.PI) / 180;
+          const x1 = Math.cos(rad) * 18, y1 = Math.sin(rad) * 18;
+          const x2 = Math.cos((deg - 8) * Math.PI / 180) * 210;
+          const y2 = Math.sin((deg - 8) * Math.PI / 180) * 210;
+          const x3 = Math.cos((deg + 8) * Math.PI / 180) * 210;
+          const y3 = Math.sin((deg + 8) * Math.PI / 180) * 210;
+          return (
+            <Path key={deg} d={`M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} Z`} fill="rgba(100,190,255,0.06)" />
+          );
+        })}
+      </Svg>
+    </RNAnimated.View>
+  );
+}
+
+function CannonSvg() {
+  return (
+    <Svg viewBox="0 0 180 160" width={180} height={160}>
+      <Defs>
+        <SvgRadialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <Stop offset="0%" stopColor="#5ecfff" stopOpacity="0.4" />
+          <Stop offset="100%" stopColor="#0040a0" stopOpacity="0" />
+        </SvgRadialGradient>
+      </Defs>
+      <Ellipse cx="90" cy="145" rx="70" ry="14" fill="url(#glow)" />
+      <Path d="M76 20 Q90 14 104 20 L110 90 Q90 98 70 90 Z" fill="#5a6a80" stroke="#3a4a58" strokeWidth="4" strokeLinejoin="round" />
+      <Path d="M76 20 Q90 14 104 20 L100 34 Q90 28 80 34 Z" fill="#ffd23f" stroke="#b87b00" strokeWidth="3" />
+      <Path d="M82 26 L82 86" stroke="rgba(255,255,255,0.3)" strokeWidth="5" strokeLinecap="round" />
+      <Path d="M60 90 Q90 82 120 90 L118 116 Q90 122 62 116 Z" fill="#4a5668" stroke="#2c3340" strokeWidth="3" />
+      <Path d="M66 96 Q90 90 114 96 L112 106 Q90 110 68 106 Z" fill="#ffd23f" opacity="0.8" />
+      <Circle cx="56" cy="130" r="22" fill="#2a2535" stroke="#1a1520" strokeWidth="3" />
+      <Circle cx="56" cy="130" r="9" fill="#ffd23f" stroke="#b87b00" strokeWidth="2.5" />
+      <Circle cx="52" cy="126" r="3" fill="rgba(255,255,255,0.5)" />
+      <Circle cx="124" cy="130" r="22" fill="#2a2535" stroke="#1a1520" strokeWidth="3" />
+      <Circle cx="124" cy="130" r="9" fill="#ffd23f" stroke="#b87b00" strokeWidth="2.5" />
+      <Circle cx="120" cy="126" r="3" fill="rgba(255,255,255,0.5)" />
+    </Svg>
   );
 }
 
 export function SplashScreen({ onDone }: SplashScreenProps) {
-  const theme = useTheme();
   const [pct, setPct] = useState(0);
-
-  const scale = useSharedValue(1);
-  useEffect(() => {
-    if (pct >= 100) {
-      scale.value = withRepeat(
-        withSequence(
-          withTiming(1.07, { duration: 550 }),
-          withTiming(1.0, { duration: 550 }),
-        ),
-        -1,
-        false,
-      );
-    }
-  }, [pct]);
-  const pulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const barAnim = useRef(new RNAnimated.Value(0)).current;
+  const btnScale = useRef(new RNAnimated.Value(1)).current;
 
   useEffect(() => {
     let p = 0;
     const id = setInterval(() => {
-      p += 4 + Math.random() * 9;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(id);
-      }
+      p += 4 + Math.random() * 8;
+      if (p >= 100) { p = 100; clearInterval(id); }
       setPct(p);
-    }, 90);
+      RNAnimated.timing(barAnim, { toValue: p / 100, duration: 120, useNativeDriver: false }).start();
+    }, 110);
     return () => clearInterval(id);
   }, []);
 
-  const sparkles = [
-    { x: W * 0.1, y: H * 0.15, delay: 0, size: 4 },
-    { x: W * 0.85, y: H * 0.12, delay: 300, size: 5 },
-    { x: W * 0.2, y: H * 0.35, delay: 600, size: 3 },
-    { x: W * 0.78, y: H * 0.38, delay: 150, size: 4 },
-    { x: W * 0.5, y: H * 0.08, delay: 450, size: 5 },
-    { x: W * 0.15, y: H * 0.55, delay: 200, size: 3 },
-    { x: W * 0.88, y: H * 0.52, delay: 500, size: 4 },
-    { x: W * 0.35, y: H * 0.7, delay: 700, size: 3 },
-    { x: W * 0.65, y: H * 0.68, delay: 100, size: 5 },
-  ];
+  useEffect(() => {
+    if (pct >= 100) {
+      RNAnimated.loop(
+        RNAnimated.sequence([
+          RNAnimated.timing(btnScale, { toValue: 1.08, duration: 550, useNativeDriver: true }),
+          RNAnimated.timing(btnScale, { toValue: 1.0, duration: 550, useNativeDriver: true }),
+        ]),
+      ).start();
+    }
+  }, [pct]);
+
+  const barWidth = barAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
-    <LinearGradient
-      colors={['#050e2e', '#0a1e5c', '#1446a0', '#1a5cc0']}
-      locations={[0, 0.3, 0.7, 1]}
-      style={StyleSheet.absoluteFill}
-    >
-      <BgBlobs />
+    <LinearGradient colors={['#040d28', '#081640', '#0c2060', '#1040a0', '#1a6ac8']} locations={[0, 0.2, 0.45, 0.75, 1]} style={StyleSheet.absoluteFill}>
+      {BLOB_CONFIGS.map((b, i) => <FloatingBlob key={i} {...b} delay={i} />)}
+      <Sparkles />
 
-      {sparkles.map((sp, i) => (
-        <Sparkle key={i} {...sp} />
-      ))}
+      <View style={styles.center}>
+        <LightRays />
 
-      <View style={styles.content}>
-        <View style={styles.logoSection}>
-          <LightRays />
-          <Logo scale={1.1} />
+        {/* Logo */}
+        <View style={styles.logoWrap}>
+          <Text style={styles.blast}>BLAST</Text>
+          <Text style={styles.buddies}>BUDDIES</Text>
         </View>
 
-        <View style={styles.cannonArea}>
-          <Cannon size={140} angle={-8} />
-          <View style={styles.cannonPlatform} />
+        {/* Cannon */}
+        <View style={styles.cannonWrap}>
+          <CannonSvg />
         </View>
 
-        <View style={styles.barArea}>
+        {/* Loading bar */}
+        <View style={styles.barWrap}>
           <View style={styles.barTrack}>
-            <LinearGradient
-              colors={['#ffd23f', '#ffb822', '#ff9500']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[
-                styles.barFill,
-                { width: `${pct}%` as any },
-              ]}
-            />
-            <View style={styles.barShine} />
+            <RNAnimated.View style={[styles.barFill, { width: barWidth }]}>
+              <LinearGradient colors={['#ffe060', '#ffb820', '#ff9500']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+              <View style={styles.barShine} />
+            </RNAnimated.View>
           </View>
-          <Text style={styles.loadText}>
-            {pct < 100 ? 'Loading Buddies...' : 'Ready!'}
-          </Text>
+          <Text style={styles.loadText}>{pct < 100 ? 'LOADING BUDDIES...' : 'READY!'}</Text>
         </View>
 
         {pct >= 100 && (
-          <Animated.View style={[styles.playWrapper, pulseStyle]}>
-            <ChunkyButton
-              onPress={onDone}
-              variant="accent"
-              fontSize={24}
-              paddingVertical={16}
-              paddingHorizontal={42}
-            >
+          <RNAnimated.View style={{ marginTop: 24, transform: [{ scale: btnScale }] }}>
+            <ChunkyButton onPress={onDone} variant="green" fontSize={22} paddingVertical={15} paddingHorizontal={46}>
               TAP TO PLAY
             </ChunkyButton>
-          </Animated.View>
+          </RNAnimated.View>
         )}
       </View>
     </LinearGradient>
@@ -190,89 +203,54 @@ export function SplashScreen({ onDone }: SplashScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  raysWrap: { position: 'absolute', width: 420, height: 420, alignItems: 'center', justifyContent: 'center' },
+  blob: { position: 'absolute' },
+  sparkle: { position: 'absolute', backgroundColor: '#fff' },
+  logoWrap: { alignItems: 'center', zIndex: 2 },
+  blast: {
+    fontFamily: 'Baloo2-ExtraBold',
+    fontWeight: '800',
+    fontSize: 80,
+    color: '#ffb822',
+    textShadowColor: '#7a3000',
+    textShadowOffset: { width: 0, height: 8 },
+    textShadowRadius: 6,
+    transform: [{ rotate: '-3deg' }],
+    letterSpacing: 2,
   },
-  logoSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+  buddies: {
+    fontFamily: 'Baloo2-ExtraBold',
+    fontWeight: '800',
+    fontSize: 52,
+    color: '#2ecbff',
+    textShadowColor: '#004880',
+    textShadowOffset: { width: 0, height: 6 },
+    textShadowRadius: 5,
+    transform: [{ rotate: '2.5deg' }],
+    marginTop: -8,
+    letterSpacing: 1,
   },
-  raysContainer: {
-    position: 'absolute',
-    width: 400,
-    height: 400,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ray: {
-    position: 'absolute',
-    width: 0,
-    height: 0,
-    borderLeftWidth: 18,
-    borderRightWidth: 18,
-    borderBottomWidth: 200,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'rgba(100,180,255,0.08)',
-    transformOrigin: 'bottom',
-    bottom: '50%',
-  },
-  cannonArea: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  cannonPlatform: {
-    width: 160,
-    height: 16,
-    borderRadius: 80,
-    backgroundColor: 'rgba(0,80,200,0.25)',
-    marginTop: -14,
-    shadowColor: '#0af',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-  },
-  barArea: {
-    marginTop: 40,
-    width: 260,
-    zIndex: 2,
-  },
+  cannonWrap: { marginTop: 10, zIndex: 2 },
+  barWrap: { width: 260, marginTop: 14, zIndex: 2 },
   barTrack: {
-    height: 28,
+    height: 30,
     borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     overflow: 'hidden',
     borderWidth: 3,
     borderColor: 'rgba(255,255,255,0.45)',
     position: 'relative',
   },
-  barFill: {
-    height: '100%',
-    borderRadius: 999,
-  },
-  barShine: {
-    position: 'absolute',
-    top: 2,
-    left: 10,
-    right: 10,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
+  barFill: { height: '100%', borderRadius: 999, overflow: 'hidden', position: 'relative' },
+  barShine: { position: 'absolute', top: 3, left: 12, right: 12, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.4)' },
   loadText: {
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: 10,
     fontFamily: 'Baloo2-Bold',
     fontWeight: '700',
-    fontSize: 16,
-    color: '#b0d4ff',
-  },
-  playWrapper: {
-    marginTop: 26,
-    zIndex: 2,
+    fontSize: 15,
+    color: '#90c8ff',
+    letterSpacing: 1.5,
   },
 });
