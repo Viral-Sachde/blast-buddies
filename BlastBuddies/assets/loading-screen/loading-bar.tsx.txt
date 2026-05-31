@@ -1,0 +1,82 @@
+import React from "react";
+import { View, StyleSheet, Animated } from "react-native";
+
+type Props = {
+  progress: number; // 0-100
+  width?: number | string;
+};
+
+export default function BlastLoadingBar({
+  progress,
+  width = "100%",
+}: Props) {
+  const safeProgress = Math.max(0, Math.min(100, progress));
+
+  return (
+    <View style={[styles.outer, { width }]}>
+      <View style={styles.track}>
+        <View
+          style={[
+            styles.fill,
+            {
+              width: `${safeProgress}%`,
+            },
+          ]}
+        >
+          <View style={styles.shine} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const BAR_HEIGHT = 28;
+
+const styles = StyleSheet.create({
+  outer: {
+    height: BAR_HEIGHT,
+    borderRadius: 999,
+    backgroundColor: "#0D6EFF",
+    padding: 3,
+
+    shadowColor: "#2A7FFF",
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+
+    elevation: 10,
+  },
+
+  track: {
+    flex: 1,
+    borderRadius: 999,
+    backgroundColor: "#001B84",
+    overflow: "hidden",
+
+    borderWidth: 2,
+    borderColor: "#00125A",
+  },
+
+  fill: {
+    height: "100%",
+    borderRadius: 999,
+
+    backgroundColor: "#FFD400",
+
+    borderTopWidth: 1,
+    borderTopColor: "#FFF06A",
+
+    borderBottomWidth: 1,
+    borderBottomColor: "#FF9800",
+  },
+
+  shine: {
+    position: "absolute",
+    top: 2,
+    left: 8,
+    right: 8,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.35)",
+  },
+});
