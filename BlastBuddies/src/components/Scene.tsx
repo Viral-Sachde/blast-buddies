@@ -1,6 +1,5 @@
 import React, { ReactNode, useRef, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, Animated } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Background } from '../types';
 
@@ -68,9 +67,8 @@ function FloatingDot({ x, y, size, delay, color }: { x: string; y: string; size:
 export function Scene({ bg, children, style = {} }: SceneProps) {
   const b = bg;
   return (
-    <LinearGradient
-      colors={[b.skyTop, b.skyBot]}
-      style={[StyleSheet.absoluteFill, { overflow: 'hidden' }, style]}
+    <View
+      style={[StyleSheet.absoluteFill, { overflow: 'hidden', backgroundColor: b.skyTop }, style]}
     >
       <View
         style={{
@@ -140,6 +138,6 @@ export function Scene({ bg, children, style = {} }: SceneProps) {
       ))}
 
       {children}
-    </LinearGradient>
+    </View>
   );
 }

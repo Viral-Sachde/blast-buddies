@@ -83,10 +83,10 @@ export function SettingsScreen({ profile, go, settings, setSettings, onReset }: 
 
       {/* Toggles card */}
       <View style={styles.card}>
-        <ToggleRow label="MUSIC"         iconName="star"  iconBg="#2ecbff" value={settings.music}   onToggle={() => toggle('music')} />
-        <ToggleRow label="SOUND FX"      iconName="power" iconBg="#ff9500" value={settings.sound}   onToggle={() => toggle('sound')} />
-        <ToggleRow label="VIBRATION"     iconName="speed" iconBg="#ff9500" value={settings.vibrate} onToggle={() => toggle('vibrate')} />
-        <ToggleRow label="NOTIFICATIONS" iconName="gift"  iconBg="#ffc83d" value={settings.notify}  onToggle={() => toggle('notify')} last />
+        <ToggleRow label="MUSIC"         iconName="music"     iconBg="#2ecbff" value={settings.music}   onToggle={() => toggle('music')} />
+        <ToggleRow label="SOUND FX"      iconName="soundfx"  iconBg="#ff9500" value={settings.sound}   onToggle={() => toggle('sound')} />
+        <ToggleRow label="VIBRATION"     iconName="vibration" iconBg="#ff7b00" value={settings.vibrate} onToggle={() => toggle('vibrate')} />
+        <ToggleRow label="NOTIFICATIONS" iconName="bell"      iconBg="#ffc83d" value={settings.notify}  onToggle={() => toggle('notify')} last />
       </View>
 
       {/* Reset */}

@@ -9,7 +9,7 @@ import Svg, {
   Path,
 } from 'react-native-svg';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { useSharedValue, runOnJS } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-reanimated';
 import { LevelBadge } from '../components/LevelBadge';
 import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icon';
@@ -60,7 +60,6 @@ export function GameScreen({
   const rafRef = useRef<number | null>(null);
   const prevTimeRef = useRef<number | null>(null);
   const cannonXRef = useRef(SW / 2);
-  const cannonXShared = useSharedValue(SW / 2);
 
   const lvl = profile.level;
   const goal = 18 + lvl * 3;

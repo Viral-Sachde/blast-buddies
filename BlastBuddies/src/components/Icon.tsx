@@ -140,6 +140,36 @@ export function Icon({ name, size = 24, color = 'currentColor' }: IconProps) {
           <Path d="M12 7c-2-3-6-1-3 1M12 7c2-3 6-1 3 1" stroke="#fff" strokeWidth="1.6" fill="none" opacity="0.55" />
         </Svg>
       );
+    case 'music':
+      return (
+        <Svg {...props}>
+          <Path d="M9 18V5l12-2v13" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          <Circle cx="6" cy="18" r="3" fill={color} />
+          <Circle cx="18" cy="16" r="3" fill={color} />
+        </Svg>
+      );
+    case 'vibration':
+      return (
+        <Svg {...props}>
+          <Rect x="7" y="5" width="10" height="14" rx="2" stroke={color} strokeWidth="2.2" />
+          <Path d="M3 8v8M21 8v8" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
+          <Path d="M1 10v4M23 10v4" stroke={color} strokeWidth="2" strokeLinecap="round" />
+        </Svg>
+      );
+    case 'bell':
+      return (
+        <Svg {...props}>
+          <Path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          <Path d="M13.73 21a2 2 0 01-3.46 0" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
+        </Svg>
+      );
+    case 'soundfx':
+      return (
+        <Svg {...props}>
+          <Path d="M11 5L6 9H3v6h3l5 4V5z" fill={color} />
+          <Path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" stroke={color} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+        </Svg>
+      );
     default:
       return null;
   }
