@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Image, Pressable, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Dimensions, Image } from 'react-native';
 import BlastLoadingBar from '../components/BlastLoadingBar';
 
 const { width: W, height: H } = Dimensions.get('window');
-
 const BG = require('../../assets/loading-screen/loading-screen-bg.png');
-const PLAY_NORMAL = require('../../assets/home-screen/buttons/play/play-regular-state-button.png');
-const PLAY_PRESSED = require('../../assets/home-screen/buttons/play/play-pressed-state-button.png');
 
 interface SplashScreenProps {
   onDone: () => void;
@@ -14,59 +11,33 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onDone }: SplashScreenProps) {
   const [pct, setPct] = useState(0);
-  const [pressed, setPressed] = useState(false);
-  const btnScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     let p = 0;
+    // ~80ms * ~68 steps ≈ 5.5 seconds total
     const id = setInterval(() => {
-      p += 4 + Math.random() * 8;
-      if (p >= 100) { p = 100; clearInterval(id); }
+      p += 1.2 + Math.random() * 0.8; // 1.2–2.0% per tick, avg ~1.6%
+      if (p >= 100) {
+        p = 100;
+        clearInterval(id);
+        setPct(100);
+        // Brief pause so bar visually completes, then navigate
+        setTimeout(onDone, 350);
+        return;
+      }
       setPct(Math.round(p));
-    }, 110);
+    }, 80);
     return () => clearInterval(id);
   }, []);
-
-  // Pulse the play button once loaded
-  useEffect(() => {
-    if (pct >= 100) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(btnScale, { toValue: 1.06, duration: 600, useNativeDriver: true }),
-          Animated.timing(btnScale, { toValue: 1.0, duration: 600, useNativeDriver: true }),
-        ]),
-      ).start();
-    }
-  }, [pct >= 100]);
 
   return (
     <View style={styles.root}>
       <Image source={BG} style={styles.bg} resizeMode="cover" />
 
-      {/* Loading bar — lower portion of screen, a bit above the bottom */}
+      {/* Loading bar only — no text, positioned below the cannon */}
       <View style={styles.barSection}>
         <BlastLoadingBar progress={pct} width={W * 0.78} />
-        <Text style={styles.loadText}>
-          {pct < 100 ? `LOADING BUDDIES...  ${pct}%` : 'READY!'}
-        </Text>
       </View>
-
-      {/* TAP TO PLAY once loaded */}
-      {pct >= 100 && (
-        <Animated.View style={[styles.playWrapper, { transform: [{ scale: btnScale }] }]}>
-          <Pressable
-            onPressIn={() => setPressed(true)}
-            onPressOut={() => setPressed(false)}
-            onPress={onDone}
-          >
-            <Image
-              source={pressed ? PLAY_PRESSED : PLAY_NORMAL}
-              style={styles.playBtn}
-              resizeMode="contain"
-            />
-          </Pressable>
-        </Animated.View>
-      )}
     </View>
   );
 }
@@ -82,31 +53,9 @@ const styles = StyleSheet.create({
   },
   barSection: {
     position: 'absolute',
-    bottom: H * 0.20,
+    bottom: H * 0.16,
     left: 0,
     right: 0,
     alignItems: 'center',
-    gap: 10,
-  },
-  loadText: {
-    fontFamily: 'Baloo2-Bold',
-    fontWeight: '700',
-    fontSize: 15,
-    color: '#90c8ff',
-    letterSpacing: 1.5,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  playWrapper: {
-    position: 'absolute',
-    bottom: H * 0.10,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  playBtn: {
-    width: 260,
-    height: 80,
   },
 });
