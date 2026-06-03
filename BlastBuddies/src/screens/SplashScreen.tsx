@@ -43,11 +43,11 @@ export function SplashScreen({ onDone }: SplashScreenProps) {
     <View style={styles.root}>
       <Image source={BG} style={styles.bg} resizeMode="cover" />
 
-      {/* Loading bar + text pinned to lower middle */}
+      {/* Loading bar — lower portion of screen, a bit above the bottom */}
       <View style={styles.barSection}>
-        <BlastLoadingBar progress={pct} width={260} />
+        <BlastLoadingBar progress={pct} width={W * 0.78} />
         <Text style={styles.loadText}>
-          {pct < 100 ? `LOADING BUDDIES... ${pct}%` : 'READY!'}
+          {pct < 100 ? `LOADING BUDDIES...  ${pct}%` : 'READY!'}
         </Text>
       </View>
 
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   },
   barSection: {
     position: 'absolute',
-    bottom: H * 0.14,
+    bottom: H * 0.20,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   playWrapper: {
     position: 'absolute',
-    bottom: H * 0.06,
+    bottom: H * 0.10,
     left: 0,
     right: 0,
     alignItems: 'center',
