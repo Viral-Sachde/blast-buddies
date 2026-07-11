@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, StyleSheet, Dimensions, Image, Pressable, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LevelBadge } from '../components/LevelBadge';
 import { Chip } from '../components/Chip';
 import { Profile, CannonSkin } from '../types';
@@ -151,12 +152,13 @@ const NAV_BTN_W = (PLAY_W - NAV_GAP * 2) / 3;  // 3 buttons fill same span as PL
 const NAV_BTN_H = NAV_BTN_W * 1.08;             // slightly taller than wide (square-ish)
 
 export function HomeScreen({ profile, cannonSkin, go, onPlay }: HomeScreenProps) {
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.root}>
       <Image source={BG} style={styles.bg} resizeMode="cover" />
 
       {/* Top HUD — level badge left, coins+gems right */}
-      <View style={styles.hud}>
+      <View style={[styles.hud, { top: insets.top + 10 }]}>
         <LevelBadge level={profile.level} progress={profile.lvlProgress} />
         <View style={styles.chips}>
           <Chip icon="coin" value={profile.coins} onAdd={() => go('shop')} />
@@ -169,7 +171,7 @@ export function HomeScreen({ profile, cannonSkin, go, onPlay }: HomeScreenProps)
         normal={SETTINGS_R} bounce={SETTINGS_B} pressed={SETTINGS_P}
         onPress={() => go('settings')}
         width={58} height={58}
-        style={styles.settingsBtn}
+        style={[styles.settingsBtn, { top: insets.top + 6 }]}
       />
 
       {/* PLAY — moved lower so it doesn't cover the cannon platform */}
@@ -198,7 +200,7 @@ const styles = StyleSheet.create({
 
   hud: {
     position: 'absolute',
-    top: 14, left: 12, right: 80,   // right: 80 leaves room for settings circle
+    left: 12, right: 80,   // right: 80 leaves room for settings circle
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
@@ -208,7 +210,6 @@ const styles = StyleSheet.create({
 
   settingsBtn: {
     position: 'absolute',
-    top: 10,
     right: 10,
     zIndex: 4,
   },

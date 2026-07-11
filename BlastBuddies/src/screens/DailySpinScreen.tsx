@@ -1,6 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GradientBG } from '../components/GradientBG';
 import Svg, { G, Path, Circle, Text as SvgText } from 'react-native-svg';
 import { SubHeader } from '../components/SubHeader';
 import { BgBlobs } from '../components/BgBlobs';
@@ -69,13 +71,28 @@ function WheelSvg({ prizes }: { prizes: Prize[] }) {
   );
 }
 
+const SPIN_KEY = 'bb_lastSpinDay';
+
+function todayStamp(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
 export function DailySpinScreen({ profile, go, onPrize }: DailySpinScreenProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const seg = 360 / PRIZES.length;
   const [spinning, setSpinning] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [won, setWon] = useState<Prize | null>(null);
   const rotation = useRef(new Animated.Value(0)).current;
+
+  // One free spin per calendar day
+  useEffect(() => {
+    AsyncStorage.getItem(SPIN_KEY)
+      .then((day) => { if (day === todayStamp()) setClaimed(true); })
+      .catch(() => {});
+  }, []);
 
   const spin = () => {
     if (spinning || claimed) return;
@@ -93,6 +110,7 @@ export function DailySpinScreen({ profile, go, onPrize }: DailySpinScreenProps) 
       setClaimed(true);
       setWon(PRIZES[idx]);
       onPrize(PRIZES[idx]);
+      AsyncStorage.setItem(SPIN_KEY, todayStamp()).catch(() => {});
     }, 3600);
   };
 
@@ -104,11 +122,11 @@ export function DailySpinScreen({ profile, go, onPrize }: DailySpinScreenProps) 
   const disabled = spinning || claimed;
 
   return (
-    <LinearGradient colors={[theme.menuTop, theme.menuBot]} style={StyleSheet.absoluteFill}>
+    <GradientBG colors={[theme.menuTop, theme.menuBot]}>
       <SubHeader title="Daily Spin" profile={profile} onBack={() => go('home')} />
       <BgBlobs />
 
-      <View style={[styles.teaser, { zIndex: 2 }]}>
+      <View style={[styles.teaser, { zIndex: 2, top: insets.top + 88 }]}>
         <Text style={[styles.teaserText, { color: theme.ink }]}>Spin for free prizes!</Text>
       </View>
 
@@ -138,12 +156,12 @@ export function DailySpinScreen({ profile, go, onPrize }: DailySpinScreenProps) 
           {claimed ? 'Come back tomorrow' : spinning ? 'Spinning…' : 'SPIN!'}
         </ChunkyButton>
       </View>
-    </LinearGradient>
+    </GradientBG>
   );
 }
 
 const styles = StyleSheet.create({
-  teaser: { position: 'absolute', top: 96, left: 0, right: 0, alignItems: 'center' },
+  teaser: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   teaserText: { fontFamily: 'Baloo2-Bold', fontSize: 20, fontWeight: '700', opacity: 0.85 },
   wheelContainer: { position: 'absolute', top: '44%', alignSelf: 'center', transform: [{ translateY: -135 }], alignItems: 'center', zIndex: 2 },
   pointer: { width: 0, height: 0, borderLeftWidth: 16, borderRightWidth: 16, borderTopWidth: 26, borderLeftColor: 'transparent', borderRightColor: 'transparent', zIndex: 5, marginBottom: -4 },

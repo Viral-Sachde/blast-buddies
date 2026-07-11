@@ -2,10 +2,9 @@
 // BLAST BUDDIES — App shell: navigation, state, theme
 // ============================================================
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ThemeProvider, useThemeContext } from './src/theme';
 import { loadProfile, saveProfile, loadSettings, saveSettings } from './src/storage';
@@ -142,6 +141,9 @@ function AppContent() {
   }, []);
 
   // ---- Game outcomes ----
+  // On win/lose the route goes back to 'home' so the game fully unmounts;
+  // the popup renders on top of the home screen. This prevents a fresh game
+  // from running (and losing) invisibly behind the popup.
   const onWin = useCallback((result: WinResult) => {
     setProfile((p) => {
       let prog = p.lvlProgress + 0.34;
@@ -156,10 +158,12 @@ function AppContent() {
       };
     });
     setPopup({ kind: 'win', result });
+    setRoute('home');
   }, []);
 
   const onLose = useCallback((result: LoseResult) => {
     setPopup({ kind: 'lose', result });
+    setRoute('home');
   }, []);
 
   const startGame = useCallback(() => {
@@ -207,9 +211,8 @@ function AppContent() {
       {route === 'daily' && (
         <DailySpinScreen profile={profile} go={go} onPrize={onPrize} />
       )}
-      {route === 'game' && (
+      {route === 'game' && !popup && (
         <GameScreen
-          key={popup ? 'frozen' : `live-${profile.level}`}
           profile={profile}
           bg={bg}
           cannonSkin={cannonSkin}
@@ -240,12 +243,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
           <AppContent />
         </ThemeProvider>
       </SafeAreaProvider>
-    </GestureHandlerRootView>
+    </View>
   );
 }
