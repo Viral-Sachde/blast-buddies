@@ -4,7 +4,8 @@
 
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GradientBG } from '../components/GradientBG';
 import { SubHeader } from '../components/SubHeader';
 import { Icon } from '../components/Icon';
 import { ChunkyButton } from '../components/ChunkyButton';
@@ -21,15 +22,13 @@ interface UpgradesScreenProps {
 
 export function UpgradesScreen({ profile, go, doUpgrade }: UpgradesScreenProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
-    <LinearGradient
-      colors={[theme.menuTop, theme.menuBot]}
-      style={StyleSheet.absoluteFill}
-    >
+    <GradientBG colors={[theme.menuTop, theme.menuBot]}>
       <SubHeader title="Power-Ups" profile={profile} onBack={() => go('home')} />
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { top: insets.top + 82 }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -104,14 +103,13 @@ export function UpgradesScreen({ profile, go, doUpgrade }: UpgradesScreenProps) 
           );
         })}
       </ScrollView>
-    </LinearGradient>
+    </GradientBG>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: {
     position: 'absolute',
-    top: 76,
     bottom: 0,
     left: 0,
     right: 0,

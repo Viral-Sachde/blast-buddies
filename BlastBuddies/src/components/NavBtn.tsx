@@ -5,8 +5,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Icon } from './Icon';
-import { useTheme } from '../theme';
-
 interface NavBtnProps {
   icon: string;
   label: string;
@@ -16,7 +14,6 @@ interface NavBtnProps {
 }
 
 export function NavBtn({ icon, label, color, onClick, badge = false }: NavBtnProps) {
-  const theme = useTheme();
   return (
     <View style={styles.container}>
       <Pressable
@@ -33,7 +30,7 @@ export function NavBtn({ icon, label, color, onClick, badge = false }: NavBtnPro
         <Icon name={icon} size={34} color="#fff" />
         {badge && <View style={styles.badge} />}
       </Pressable>
-      <Text style={[styles.label, { color: theme.ink }]}>{label}</Text>
+      <Text style={styles.label}>{label}</Text>
     </View>
   );
 }
@@ -70,5 +67,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Baloo2-Bold',
     fontSize: 13,
     fontWeight: '700',
+    color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });

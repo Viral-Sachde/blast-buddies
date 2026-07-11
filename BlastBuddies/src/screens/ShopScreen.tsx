@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GradientBG } from '../components/GradientBG';
 import { SubHeader } from '../components/SubHeader';
 import { ScenePreview } from '../components/ScenePreview';
 import { Cannon } from '../components/Cannon';
@@ -67,17 +68,15 @@ export function ShopScreen({
   selectCannon,
 }: ShopScreenProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<'bg' | 'cannon'>('bg');
 
   return (
-    <LinearGradient
-      colors={[theme.menuTop, theme.menuBot]}
-      style={StyleSheet.absoluteFill}
-    >
+    <GradientBG colors={[theme.menuTop, theme.menuBot]}>
       <SubHeader title="Shop" profile={profile} onBack={() => go('home')} />
 
       {/* Tabs */}
-      <View style={styles.tabs}>
+      <View style={[styles.tabs, { top: insets.top + 78 }]}>
         <Tab active={tab === 'bg'} onPress={() => setTab('bg')}>
           Backgrounds
         </Tab>
@@ -87,7 +86,7 @@ export function ShopScreen({
       </View>
 
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { top: insets.top + 138 }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -215,14 +214,13 @@ export function ShopScreen({
           </View>
         )}
       </ScrollView>
-    </LinearGradient>
+    </GradientBG>
   );
 }
 
 const styles = StyleSheet.create({
   tabs: {
     position: 'absolute',
-    top: 72,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -247,7 +245,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     position: 'absolute',
-    top: 132,
     bottom: 0,
     left: 0,
     right: 0,

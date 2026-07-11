@@ -1,16 +1,5 @@
-// ============================================================
-// BLAST BUDDIES — Floating background monster blobs
-// ============================================================
-
-import React from 'react';
-import { View } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import React, { useRef, useEffect } from 'react';
+import { View, Animated } from 'react-native';
 import { Monster } from './Monster';
 import { MONSTERS } from '../data';
 
@@ -23,25 +12,19 @@ const BLOB_CONFIGS = [
 ];
 
 function FloatingBlob({ config }: { config: typeof BLOB_CONFIGS[0] }) {
-  const translateY = useSharedValue(0);
-  React.useEffect(() => {
-    translateY.value = withRepeat(
-      withSequence(
-        withTiming(-8, { duration: 1500 + config.d * 500 }),
-        withTiming(0, { duration: 1500 + config.d * 500 }),
-      ),
-      -1,
-      false,
-    );
+  const translateY = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateY, { toValue: -8, duration: 1500 + config.d * 500, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration: 1500 + config.d * 500, useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
   return (
     <Animated.View
       style={[
-        { position: 'absolute', left: config.x as any, top: config.y as any, opacity: 0.5 },
-        animStyle,
+        { position: 'absolute', left: config.x as any, top: config.y as any, opacity: 0.35, transform: [{ translateY }] },
       ]}
     >
       <Monster skin={MONSTERS[config.k]} num="" size={config.s} />

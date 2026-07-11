@@ -4,10 +4,10 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from './Icon';
 import { Chip } from './Chip';
 import { IconButton } from './ChunkyButton';
-import { useTheme } from '../theme';
 import { Profile } from '../types';
 
 interface SubHeaderProps {
@@ -17,13 +17,13 @@ interface SubHeaderProps {
 }
 
 export function SubHeader({ title, profile, onBack }: SubHeaderProps) {
-  const theme = useTheme();
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
       <IconButton onPress={onBack} style={styles.backBtn}>
         <Icon name="back" size={26} color="#5a6678" />
       </IconButton>
-      <Text style={[styles.title, { color: theme.ink }]}>{title}</Text>
+      <Text style={[styles.title, { color: '#fff' }]}>{title}</Text>
       <Chip icon="coin" value={profile.coins} />
       <Chip icon="gem" value={profile.gems} />
     </View>
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingVertical: 14,
+    paddingBottom: 14,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
