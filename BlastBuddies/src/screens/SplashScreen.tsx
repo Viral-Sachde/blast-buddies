@@ -51,9 +51,11 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
+  // Sits in the soft cloud band at the very bottom of the artwork,
+  // clear of the cannon platform above it.
   barSection: {
     position: 'absolute',
-    bottom: H * 0.16,
+    bottom: H * 0.07,
     left: 0,
     right: 0,
     alignItems: 'center',

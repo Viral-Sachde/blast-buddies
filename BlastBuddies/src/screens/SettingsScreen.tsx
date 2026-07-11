@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, Alert, StyleSheet, Dimensions, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon';
 import { Chip } from '../components/Chip';
 import { IconButton } from '../components/ChunkyButton';
@@ -56,6 +57,7 @@ function ToggleRow({
 }
 
 export function SettingsScreen({ profile, go, settings, setSettings, onReset }: SettingsScreenProps) {
+  const insets = useSafeAreaInsets();
   const toggle = (key: keyof AppSettings) =>
     setSettings({ ...settings, [key]: !settings[key] });
 
@@ -70,7 +72,7 @@ export function SettingsScreen({ profile, go, settings, setSettings, onReset }: 
       <Image source={BG} style={styles.bg} resizeMode="cover" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <IconButton onPress={() => go('home')} style={styles.backBtn}>
           <Icon name="back" size={26} color="#fff" />
         </IconButton>
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingVertical: 14,
+    paddingBottom: 14,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', gap: 8 },
   card: {
     position: 'absolute',
-    top: H * 0.14,
+    top: H * 0.16,
     left: 16,
     right: 16,
     backgroundColor: '#fff',
